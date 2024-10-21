@@ -10,57 +10,40 @@ class Funcs():
         self.palavra_ent.delete(0,END)
         self.tag_ent.delete(0,END)
     def conecta_bd(self):
-        self.conn = sqlite3.connect("palavras.db")
-        self.cursor = self.conn.cursor(); print('Conectando no Banco de dados...')
+        self.conn = sqlite3.connect("palavras.bd")
+        self.cursor = self.conn.cursor()
     def desconect_bd(self):
-        self.conn.close(); print("Banco de dados desconectado")
+        self.conn.close()
     def montaTabela(self):
-        self.conecta_bd()
+        self.conecta_bd(); print('Conectando no Banco de dados...')
         #Criar tabelas
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS palavras(
-                pal CHAR(40) NOT NULL,
-                Tag CHAR(40) NOT NULL
+                pal CHAR(40) PRIMARY KEY,
+                tag CHAR(40),
             );
         """)
-        self.conn.commit(); print("Banco de dados criado")
+        self.conn.commit();print("Banco de dados criado")
         self.desconect_bd()
-    def variaveis(self):
-        self.palavras = self.palavra_ent.get()
-        self.tag = self.tag_ent.get()
     def add_palavra(self):
-        self.variaveis()
+        self.palavra = self.palavra_entry
+        self.tag = self.tag_entry
         self.conecta_bd()
+
         self.cursor.execute(""" INSERT INTO palavras (pal, tag)
-        VALUES (?, ?)""", (self.palavras, self.tag))
+        VALUES (?, ?""",(self.palavra,self.tag))
         self.conn.commit()
         self.desconect_bd()
         self.select_lista()
         self.limpa_tela()
     def select_lista(self):
-        self.list_pal.delete(*self.list_pal.get_children())
+        self.list_pal.delet(*self.list_pal.get_children())
         self.conecta_bd()
-        lista = self.cursor.execute(""" SELECT pal,tag FROM palavras
-            ORDER BY pal ASC;""")
+        lista = self.cursor.execute(""" SELECT pal, tag FROM palavras
+            ORDER BY palavra ASC;""")
         for i in lista:
-            self.list_pal.insert("", END, values=i)
+            self.list_pal.insert("",END, values=i)
         self.desconect_bd()
-    def clickduplo(self, event):
-        self.limpa_tela()
-        self.list_pal.selection()
-
-        for n in self.list_pal.selection():
-            col1, col2 = self.list_pal.item(n, 'values')
-            self.palavra_ent.insert(END, col1)
-            self.tag_ent.insert(END, col2)
-    def deleta_pal(self):
-        self.variaveis()
-        self.conecta_bd()
-        self.cursor.execute("""DELETE FROM palavras WHERE pal = ? """, (self.palavras,))
-        self.conn.commit()
-        self.desconect_bd()
-        self.limpa_tela()
-        self.select_lista()
 #front-end
 class Application(Funcs):
     def __init__(self):
@@ -96,12 +79,7 @@ class Application(Funcs):
         #Botao Adicionar
 
         self.bt_add = Button(self.frame_1,text="Adicionar",bd=4,font= ('Courier', 8,'bold'),command=self.add_palavra)
-        self.bt_add.place(relx=0.2,rely=0.11,relwidth=0.1,relheight=0.1)
-
-        #Apagar palavra
-
-        self.bt_apaga = Button(self.frame_1, text="Apagar", bd=4, font= ('Courier', 8, 'bold'), command=self.deleta_pal)
-        self.bt_apaga.place(relx=0.2, rely=0.41,relwidth=0.1, relheight=0.1)
+        self.bt_add.place(relx=0.2,rely=0.27,relwidth=0.1,relheight=0.1)
 
         #Palavra Aleatoria
 
@@ -143,19 +121,16 @@ class Application(Funcs):
 
         #Define nome/colunas
 
-        self.list_pal = ttk.Treeview(self.frame_2, height=3, columns=("col1","col2"))
+        self.list_pal = ttk.Treeview(self.frame_2, height=3, columns=("col1","col2","col3"))
         self.list_pal.heading("#0", text="")
-        self.list_pal.heading("#1", text="Palavras")
-        self.list_pal.heading("#2", text="Tag")
-        #self.list_pal.heading("#3", text="Acertos")
+        self.list_pal.heading("#1", text="Erros")
+        self.list_pal.heading("2", text="Acertos")
 
         #Define padrão
 
-        self.list_pal.column("#0",width=0, stretch=NO)
-        self.list_pal.column("#1",width=50)
-        self.list_pal.column("#2", width=50)
-        #self.list_pal.column("#3",width=160)
-        #self.list_pal.column("#4",width=160)
+        self.list_pal.column("#0",width=1)
+        self.list_pal.column("1",width=250)
+        self.list_pal.column("2",width=250)
 
         #Define proporção
 
@@ -166,5 +141,4 @@ class Application(Funcs):
         self.scroolList = Scrollbar(self.frame_2,orient='vertical')
         self.list_pal.configure(yscrollcommand=self.scroolList.set)
         self.scroolList.place(relx=0.96,rely=0.01,relwidth=0.04,relheight=0.85)
-        self.list_pal.bind("<Double-1>", self.clickduplo)
 Application()
